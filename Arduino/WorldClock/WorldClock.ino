@@ -29,7 +29,7 @@
 #define PIN           3
 
 // How many NeoPixels are attached to the Arduino?
-#define NUMPIXELS     32
+#define NUMPIXELS     98
 
 // When we setup the NeoPixel library, we tell it how many pixels, and which pin to use to send signals.
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
@@ -66,9 +66,9 @@ int m;
 int s;
 
 // RGB color variables
-int red=255;
-int green=0;
-int blue=0;
+int red=55;
+int green=55;
+int blue=55;
 
 void setup()
 {
@@ -103,7 +103,7 @@ void loop()
 {
   
   //Declare integer array with size corresponding to number of Neopixels in chain
-  int individualPixels[NUMPIXELS]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  int individualPixels[NUMPIXELS]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   
   /* Check for button presses & reset time if necessary */
   minusCurrState=digitalRead(MINUSFIVEMINS); //Get current state of MINUSFIVEMINS button
@@ -139,64 +139,127 @@ void loop()
 
   /* Parse time values to light corresponding pixels */
   individualPixels[0]=1; //Light "IT"
-  individualPixels[1]=1; //Light "IS" 
+  individualPixels[1]=1; 
+   
+  individualPixels[2]=1; //Light "IS" 
+  individualPixels[3]=1;
   
   /* Minutes between 0-5 - Light "O CLOCK" */
   if ((m>=0 && m<5)){
-    individualPixels[28]=1;
-    individualPixels[29]=1;
+    individualPixels[86]=1;
+    individualPixels[87]=1;
+    individualPixels[88]=1;
+    individualPixels[89]=1;
+    individualPixels[90]=1;
+    individualPixels[91]=1;
+    
   }
   
   /* Minutes between 5-10 or 55-60 - Light "FIVE," "MINUTES" */
   if ((m>=5 && m<10) || (m>=55 && m<60)){
-    individualPixels[8]=1;
-    individualPixels[9]=1;
-    individualPixels[10]=1;
+    individualPixels[24]=1; //FIVE
+    individualPixels[25]=1;
+    individualPixels[26]=1;
+    individualPixels[27]=1;
+
+    individualPixels[28]=1; //MINUTES
+    individualPixels[29]=1;
+    individualPixels[30]=1;
+    individualPixels[31]=1;
+    individualPixels[32]=1;
+    individualPixels[33]=1;
+    individualPixels[34]=1;
   }
   
   /* Minutes between 10-15 or 50-55 - Light "TEN," "MINUTES" */
   if ((m>=10 && m<15) || (m>=50 && m<55)){
-    individualPixels[2]=1;
-    individualPixels[9]=1;
-    individualPixels[10]=1;
+    individualPixels[4]=1;//TEN
+    individualPixels[5]=1;
+    individualPixels[6]=1;
+
+    individualPixels[28]=1; //MINUTES
+    individualPixels[29]=1;
+    individualPixels[30]=1;
+    individualPixels[31]=1;
+    individualPixels[32]=1;
+    individualPixels[33]=1;
+    individualPixels[34]=1;
   }
   
   /* Minutes between 15-20 or 45-50 - Light "QUARTER" */
   if ((m>=15 && m<20) || (m>=45 && m<50)){
-    individualPixels[6]=1;
-    individualPixels[7]=1;
+    individualPixels[17]=1;
+    individualPixels[18]=1;
+    individualPixels[19]=1;
+    individualPixels[20]=1;
+    individualPixels[21]=1;
+    individualPixels[22]=1;
+    individualPixels[23]=1;
   }
   
   /* Minutes between 20-25 or 40-45 - Light "TWENTY," "MINUTES" */
   if ((m>=20 && m<25) || (m>=40 && m<45)){
-    individualPixels[4]=1;
-    individualPixels[5]=1;
-    individualPixels[9]=1;
-    individualPixels[10]=1;
+    individualPixels[11]=1;//TWENTY
+    individualPixels[12]=1;
+    individualPixels[13]=1;
+    individualPixels[14]=1;
+    individualPixels[15]=1;
+    individualPixels[16]=1;
+    
+    individualPixels[28]=1; //MINUTES
+    individualPixels[29]=1;
+    individualPixels[30]=1;
+    individualPixels[31]=1;
+    individualPixels[32]=1;
+    individualPixels[33]=1;
+    individualPixels[34]=1;
   }  
 
   /* Minutes between 25-30 or 35-40 - Light "TWENTY," "FIVE," "MINUTES" */
   if ((m>=25 && m<30) || (m>=35 && m<40)){
-    individualPixels[4]=1;
-    individualPixels[5]=1;
-    individualPixels[8]=1;
-    individualPixels[9]=1;
-    individualPixels[10]=1;
+    individualPixels[11]=1;//TWENTY
+    individualPixels[12]=1;
+    individualPixels[13]=1;
+    individualPixels[14]=1;
+    individualPixels[15]=1;
+    individualPixels[16]=1;
+
+    individualPixels[24]=1;//FIVE
+    individualPixels[25]=1;
+    individualPixels[26]=1;
+    individualPixels[27]=1;
+
+    individualPixels[28]=1;//MINUTES
+    individualPixels[29]=1;
+    individualPixels[30]=1;
+    individualPixels[31]=1;
+    individualPixels[32]=1;
+    individualPixels[33]=1;
+    individualPixels[34]=1;
+
+
   }
 
   /* Minutes between 30-35 - Light "HALF" */
   if ((m>=30 && m<35)){
-    individualPixels[3]=1;
+    individualPixels[7]=1;
+    individualPixels[8]=1;
+    individualPixels[9]=1;
+    individualPixels[10]=1;
   }
   
   /* Minutes between 5-35 - Light "PAST" */
   if ((m>=5) && (m<35)){
-    individualPixels[14]=1;
+    individualPixels[43]=1;
+    individualPixels[44]=1;
+    individualPixels[45]=1;
+    individualPixels[46]=1;
   }
   
   /* Minutes between 35-60 - Light "TO" & MODIFY CURRENT HOUR VALUE */
   if (m>=35){
-    individualPixels[13]=1;
+    individualPixels[41]=1;
+    individualPixels[42]=1;
     h++; //Add 1 from current hour
     /*Set time to twelve for hour around midnight, noon */
     if (h==0){
@@ -210,67 +273,101 @@ void loop()
 
   /* Hour=1 - Light "ONE" */
   if (h==1){
-    individualPixels[12]=1;
+    individualPixels[38]=1;
+    individualPixels[39]=1;
+    individualPixels[40]=1;
   }
   
   /* Hour=2 - Light "TWO" */
   if (h==2){
-    individualPixels[11]=1;
+    individualPixels[35]=1;
+    individualPixels[36]=1;
+    individualPixels[37]=1;
   }
   
   /* Hour=3 - Light "THREE" */
   if (h==3){
-    individualPixels[15]=1;
-    individualPixels[16]=1;    
+    individualPixels[47]=1;
+    individualPixels[48]=1;
+    individualPixels[49]=1; 
+    individualPixels[50]=1; 
+    individualPixels[51]=1;     
   }
   
   /* Hour=4 - Light "FOUR" */
   if (h==4){
-    individualPixels[17]=1;
+    individualPixels[52]=1;
+    individualPixels[53]=1;
+    individualPixels[54]=1;
+    individualPixels[55]=1;
   }
   
   /* Hour=5 - Light "FIVE" */
   if (h==5){
-    individualPixels[18]=1;
+    individualPixels[56]=1;
+    individualPixels[57]=1;
+    individualPixels[58]=1;
+    individualPixels[59]=1;
   }
   
   /* Hour=6 - Light "SIX" */
   if (h==6){
-    individualPixels[23]=1;
+    individualPixels[70]=1;
+    individualPixels[71]=1;
+    individualPixels[72]=1;
   }
   
   /* Hour=7 - Light "SEVEN" */
   if (h==7){
-    individualPixels[21]=1;
-    individualPixels[22]=1;
+    individualPixels[65]=1;
+    individualPixels[66]=1;
+    individualPixels[67]=1;
+    individualPixels[68]=1;
+    individualPixels[69]=1;
   }
   
   /* Hour=8 - Light "EIGHT" */
   if (h==8){
-    individualPixels[19]=1;
-    individualPixels[20]=1;
+    individualPixels[60]=1;
+    individualPixels[61]=1;
+    individualPixels[62]=1;
+    individualPixels[63]=1;
+    individualPixels[64]=1;
   }
   
   /* Hour=9 - Light "NINE" */
   if (h==9){
-    individualPixels[24]=1;
+    individualPixels[73]=1;
+    individualPixels[74]=1;
+    individualPixels[75]=1;
+    individualPixels[76]=1;
   }
   
   /* Hour=10 - Light "TEN" */
   if (h==10){
-    individualPixels[25]=1;
+    individualPixels[77]=1;
+    individualPixels[78]=1;
+    individualPixels[79]=1;
   }
   
   /* Hour=11 - Light "ELEVEN" */
   if (h==11){
-    individualPixels[26]=1;
-    individualPixels[27]=1;
+    individualPixels[80]=1;
+    individualPixels[81]=1;
+    individualPixels[82]=1;
+    individualPixels[83]=1;
+    individualPixels[84]=1;
+    individualPixels[85]=1;
   }
   
   /* Hour=12 - Light "TWELVE" */
   if (h==12){
-    individualPixels[30]=1;
-    individualPixels[31]=1;
+    individualPixels[92]=1;
+    individualPixels[93]=1;
+    individualPixels[94]=1;
+    individualPixels[95]=1;
+    individualPixels[96]=1;
+    individualPixels[97]=1;
   }
   
   /* Light pixels corresponding to current time */
