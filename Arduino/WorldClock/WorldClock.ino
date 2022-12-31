@@ -22,8 +22,8 @@
 */
 
 #include <Adafruit_NeoPixel.h>
-#include <avr/power.h>
-#include "Time.h"
+//#include <avr/power.h>
+//#include "Time.h"
 
 // Which pin on the Arduino is connected to the NeoPixels?
 #define PIN           3
@@ -37,7 +37,7 @@
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 // Declare integer array with size corresponding to number of Neopixels in chain
-// int individualPixels[NUMPIXELS];
+// int pixelOnOff[NUMPIXELS];
 
 //Declare pins for decrementing/incrementing current time by 5 minutes
 #define MINUSFIVEMINS 4
@@ -66,9 +66,97 @@ int m;
 int s;
 
 // RGB color variables
-int red=55;
-int green=55;
-int blue=55;
+int red=255;
+int green=255;
+int blue=255;
+
+/*
+13 x 8
+IT~IS~TENHALF
+QUARTERTWENTY
+FIVE~MINUTES~
+PASTTO~ONETWO
+THREEFOURFIVE
+SIXSEVENEIGHT
+NINETENELEVEN
+TWELVE~OCLOCK
+*/
+
+// Matrix variables
+const short
+  gridCols = 13, // How many letters across
+  gridRows = 8, // How many letters tall
+  millisTransition = 5000, // How long should we do the matrix for? (in milliseconds)
+  millisWait = 100, // How long should we wait, before changing to the next frame of the matrix animation? (in milliseconds)
+  matrixDensity = 5, // How often should we start a new thread in the matrix? Higher = less frequent, Lower = more frequent
+  matrixIterations = millisTransition / millisWait;
+
+// List of colours used in the transition for faded matrix effect
+const uint32_t colours[5] = {
+  pixels.Color(0, 0, 0),
+  pixels.Color(63, 63, 63),
+  pixels.Color(127, 127, 127),
+  pixels.Color(191, 191, 191),
+  pixels.Color(255, 255, 255)
+};
+
+// Index grid to keep track of the "matrixColour" for each pixel
+short pixelColours[NUMPIXELS];
+
+// Pixel mapping into grid, so matrix can flow
+const short pixelGrid[gridRows][gridCols] = {
+  {0,1,-1,2,3,-1,4,5,6,7,8,9,10},
+  {23,22,21,20,19,18,17,16,15,14,13,12,11},
+  {24,25,26,27,-1,28,29,30,31,32,33,34,34},
+  {46,45,44,43,42,41,-1,40,39,38,37,36,35},
+  {47,48,49,50,51,52,53,54,55,56,57,58,59},
+  {72,71,70,69,68,67,66,65,64,63,62,61,60},
+  {73,74,75,76,77,78,79,80,81,82,83,84,85},
+  {97,96,95,94,93,92,-1,91,90,89,88,87,86}
+};
+
+//Declare integer array with size corresponding to number of Neopixels in chain
+bool pixelOnOff[NUMPIXELS];
+
+/* Light pixels corresponding to current time */
+void colourPixels(unsigned long wait) {
+  for (short i = 0, colour; i < NUMPIXELS; i++) {
+    pixels.setPixelColor(i, pixelColours[i]); //Set Neopixel color
+  }
+  
+  pixels.show(); //Display Neopixel color
+
+  delay(wait);
+}
+
+void matrixFade(const short& r, const short& c, const short& currIteration) {
+    // Transition the current letter's colour
+    short currColour = pixelColours[pixelGrid[r][c]];
+    short nextColour = currColour > 0 ? currColour - 1 : currColour;
+
+    pixelColours[pixelGrid[r][c]] = nextColour;
+
+    // If we're stopping the animation
+    if (currIteration >= matrixIterations) {
+        // If there's another letter under the current one AND 
+        // we're not overwriting a letter that is supposed to be lit
+        if (
+            r + 1 < gridRows
+            && !(
+                pixelOnOff[pixelGrid[r + 1][c]] &&
+                pixelColours[pixelGrid[r + 1][c]] == colours[sizeof(colours) - 1]
+                )
+            ) {
+            // Pass the colour along
+            pixelColours[pixelGrid[r + 1][c]] = currColour;
+        }
+    }
+    // If there's another letter under the current one
+    else if (r + 1 < gridRows) {
+        // Pass the coloru along
+        pixelColours[pixelGrid[r + 1][c]] = currColour;
+    }
+}
 
 void setup()
 {
@@ -102,8 +190,10 @@ void setup()
 void loop()
 {
   
-  //Declare integer array with size corresponding to number of Neopixels in chain
-  int individualPixels[NUMPIXELS]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+  // Clear the clock
+  for (int i = 0; i < NUMPIXELS; i++) {
+    pixelOnOff[i] = false;
+  }
   
   /* Check for button presses & reset time if necessary */
   minusCurrState=digitalRead(MINUSFIVEMINS); //Get current state of MINUSFIVEMINS button
@@ -138,128 +228,128 @@ void loop()
   Serial.println(s);
 
   /* Parse time values to light corresponding pixels */
-  individualPixels[0]=1; //Light "IT"
-  individualPixels[1]=1; 
+  pixelOnOff[0]=true; //Light "IT"
+  pixelOnOff[1]=true; 
    
-  individualPixels[2]=1; //Light "IS" 
-  individualPixels[3]=1;
+  pixelOnOff[2]=true; //Light "IS" 
+  pixelOnOff[3]=true;
   
   /* Minutes between 0-5 - Light "O CLOCK" */
   if ((m>=0 && m<5)){
-    individualPixels[86]=1;
-    individualPixels[87]=1;
-    individualPixels[88]=1;
-    individualPixels[89]=1;
-    individualPixels[90]=1;
-    individualPixels[91]=1;
+    pixelOnOff[86]=true;
+    pixelOnOff[87]=true;
+    pixelOnOff[88]=true;
+    pixelOnOff[89]=true;
+    pixelOnOff[90]=true;
+    pixelOnOff[91]=true;
     
   }
   
   /* Minutes between 5-10 or 55-60 - Light "FIVE," "MINUTES" */
   if ((m>=5 && m<10) || (m>=55 && m<60)){
-    individualPixels[24]=1; //FIVE
-    individualPixels[25]=1;
-    individualPixels[26]=1;
-    individualPixels[27]=1;
+    pixelOnOff[24]=true; //FIVE
+    pixelOnOff[25]=true;
+    pixelOnOff[26]=true;
+    pixelOnOff[27]=true;
 
-    individualPixels[28]=1; //MINUTES
-    individualPixels[29]=1;
-    individualPixels[30]=1;
-    individualPixels[31]=1;
-    individualPixels[32]=1;
-    individualPixels[33]=1;
-    individualPixels[34]=1;
+    pixelOnOff[28]=true; //MINUTES
+    pixelOnOff[29]=true;
+    pixelOnOff[30]=true;
+    pixelOnOff[31]=true;
+    pixelOnOff[32]=true;
+    pixelOnOff[33]=true;
+    pixelOnOff[34]=true;
   }
   
   /* Minutes between 10-15 or 50-55 - Light "TEN," "MINUTES" */
   if ((m>=10 && m<15) || (m>=50 && m<55)){
-    individualPixels[4]=1;//TEN
-    individualPixels[5]=1;
-    individualPixels[6]=1;
+    pixelOnOff[4]=true;//TEN
+    pixelOnOff[5]=true;
+    pixelOnOff[6]=true;
 
-    individualPixels[28]=1; //MINUTES
-    individualPixels[29]=1;
-    individualPixels[30]=1;
-    individualPixels[31]=1;
-    individualPixels[32]=1;
-    individualPixels[33]=1;
-    individualPixels[34]=1;
+    pixelOnOff[28]=true; //MINUTES
+    pixelOnOff[29]=true;
+    pixelOnOff[30]=true;
+    pixelOnOff[31]=true;
+    pixelOnOff[32]=true;
+    pixelOnOff[33]=true;
+    pixelOnOff[34]=true;
   }
   
   /* Minutes between 15-20 or 45-50 - Light "QUARTER" */
   if ((m>=15 && m<20) || (m>=45 && m<50)){
-    individualPixels[17]=1;
-    individualPixels[18]=1;
-    individualPixels[19]=1;
-    individualPixels[20]=1;
-    individualPixels[21]=1;
-    individualPixels[22]=1;
-    individualPixels[23]=1;
+    pixelOnOff[17]=true;
+    pixelOnOff[18]=true;
+    pixelOnOff[19]=true;
+    pixelOnOff[20]=true;
+    pixelOnOff[21]=true;
+    pixelOnOff[22]=true;
+    pixelOnOff[23]=true;
   }
   
   /* Minutes between 20-25 or 40-45 - Light "TWENTY," "MINUTES" */
   if ((m>=20 && m<25) || (m>=40 && m<45)){
-    individualPixels[11]=1;//TWENTY
-    individualPixels[12]=1;
-    individualPixels[13]=1;
-    individualPixels[14]=1;
-    individualPixels[15]=1;
-    individualPixels[16]=1;
+    pixelOnOff[11]=true;//TWENTY
+    pixelOnOff[12]=true;
+    pixelOnOff[13]=true;
+    pixelOnOff[14]=true;
+    pixelOnOff[15]=true;
+    pixelOnOff[16]=true;
     
-    individualPixels[28]=1; //MINUTES
-    individualPixels[29]=1;
-    individualPixels[30]=1;
-    individualPixels[31]=1;
-    individualPixels[32]=1;
-    individualPixels[33]=1;
-    individualPixels[34]=1;
+    pixelOnOff[28]=true; //MINUTES
+    pixelOnOff[29]=true;
+    pixelOnOff[30]=true;
+    pixelOnOff[31]=true;
+    pixelOnOff[32]=true;
+    pixelOnOff[33]=true;
+    pixelOnOff[34]=true;
   }  
 
   /* Minutes between 25-30 or 35-40 - Light "TWENTY," "FIVE," "MINUTES" */
   if ((m>=25 && m<30) || (m>=35 && m<40)){
-    individualPixels[11]=1;//TWENTY
-    individualPixels[12]=1;
-    individualPixels[13]=1;
-    individualPixels[14]=1;
-    individualPixels[15]=1;
-    individualPixels[16]=1;
+    pixelOnOff[11]=true;//TWENTY
+    pixelOnOff[12]=true;
+    pixelOnOff[13]=true;
+    pixelOnOff[14]=true;
+    pixelOnOff[15]=true;
+    pixelOnOff[16]=true;
 
-    individualPixels[24]=1;//FIVE
-    individualPixels[25]=1;
-    individualPixels[26]=1;
-    individualPixels[27]=1;
+    pixelOnOff[24]=true;//FIVE
+    pixelOnOff[25]=true;
+    pixelOnOff[26]=true;
+    pixelOnOff[27]=true;
 
-    individualPixels[28]=1;//MINUTES
-    individualPixels[29]=1;
-    individualPixels[30]=1;
-    individualPixels[31]=1;
-    individualPixels[32]=1;
-    individualPixels[33]=1;
-    individualPixels[34]=1;
+    pixelOnOff[28]=true;//MINUTES
+    pixelOnOff[29]=true;
+    pixelOnOff[30]=true;
+    pixelOnOff[31]=true;
+    pixelOnOff[32]=true;
+    pixelOnOff[33]=true;
+    pixelOnOff[34]=true;
 
 
   }
 
   /* Minutes between 30-35 - Light "HALF" */
   if ((m>=30 && m<35)){
-    individualPixels[7]=1;
-    individualPixels[8]=1;
-    individualPixels[9]=1;
-    individualPixels[10]=1;
+    pixelOnOff[7]=true;
+    pixelOnOff[8]=true;
+    pixelOnOff[9]=true;
+    pixelOnOff[10]=true;
   }
   
   /* Minutes between 5-35 - Light "PAST" */
   if ((m>=5) && (m<35)){
-    individualPixels[43]=1;
-    individualPixels[44]=1;
-    individualPixels[45]=1;
-    individualPixels[46]=1;
+    pixelOnOff[43]=true;
+    pixelOnOff[44]=true;
+    pixelOnOff[45]=true;
+    pixelOnOff[46]=true;
   }
   
   /* Minutes between 35-60 - Light "TO" & MODIFY CURRENT HOUR VALUE */
   if (m>=35){
-    individualPixels[41]=1;
-    individualPixels[42]=1;
+    pixelOnOff[41]=true;
+    pixelOnOff[42]=true;
     h++; //Add 1 from current hour
     /*Set time to twelve for hour around midnight, noon */
     if (h==0){
@@ -273,119 +363,197 @@ void loop()
 
   /* Hour=1 - Light "ONE" */
   if (h==1){
-    individualPixels[38]=1;
-    individualPixels[39]=1;
-    individualPixels[40]=1;
+    pixelOnOff[38]=true;
+    pixelOnOff[39]=true;
+    pixelOnOff[40]=true;
   }
   
   /* Hour=2 - Light "TWO" */
   if (h==2){
-    individualPixels[35]=1;
-    individualPixels[36]=1;
-    individualPixels[37]=1;
+    pixelOnOff[35]=true;
+    pixelOnOff[36]=true;
+    pixelOnOff[37]=true;
   }
   
   /* Hour=3 - Light "THREE" */
   if (h==3){
-    individualPixels[47]=1;
-    individualPixels[48]=1;
-    individualPixels[49]=1; 
-    individualPixels[50]=1; 
-    individualPixels[51]=1;     
+    pixelOnOff[47]=true;
+    pixelOnOff[48]=true;
+    pixelOnOff[49]=true; 
+    pixelOnOff[50]=true; 
+    pixelOnOff[51]=true;     
   }
   
   /* Hour=4 - Light "FOUR" */
   if (h==4){
-    individualPixels[52]=1;
-    individualPixels[53]=1;
-    individualPixels[54]=1;
-    individualPixels[55]=1;
+    pixelOnOff[52]=true;
+    pixelOnOff[53]=true;
+    pixelOnOff[54]=true;
+    pixelOnOff[55]=true;
   }
   
   /* Hour=5 - Light "FIVE" */
   if (h==5){
-    individualPixels[56]=1;
-    individualPixels[57]=1;
-    individualPixels[58]=1;
-    individualPixels[59]=1;
+    pixelOnOff[56]=true;
+    pixelOnOff[57]=true;
+    pixelOnOff[58]=true;
+    pixelOnOff[59]=true;
   }
   
   /* Hour=6 - Light "SIX" */
   if (h==6){
-    individualPixels[70]=1;
-    individualPixels[71]=1;
-    individualPixels[72]=1;
+    pixelOnOff[70]=true;
+    pixelOnOff[71]=true;
+    pixelOnOff[72]=true;
   }
   
   /* Hour=7 - Light "SEVEN" */
   if (h==7){
-    individualPixels[65]=1;
-    individualPixels[66]=1;
-    individualPixels[67]=1;
-    individualPixels[68]=1;
-    individualPixels[69]=1;
+    pixelOnOff[65]=true;
+    pixelOnOff[66]=true;
+    pixelOnOff[67]=true;
+    pixelOnOff[68]=true;
+    pixelOnOff[69]=true;
   }
   
   /* Hour=8 - Light "EIGHT" */
   if (h==8){
-    individualPixels[60]=1;
-    individualPixels[61]=1;
-    individualPixels[62]=1;
-    individualPixels[63]=1;
-    individualPixels[64]=1;
+    pixelOnOff[60]=true;
+    pixelOnOff[61]=true;
+    pixelOnOff[62]=true;
+    pixelOnOff[63]=true;
+    pixelOnOff[64]=true;
   }
   
   /* Hour=9 - Light "NINE" */
   if (h==9){
-    individualPixels[73]=1;
-    individualPixels[74]=1;
-    individualPixels[75]=1;
-    individualPixels[76]=1;
+    pixelOnOff[73]=true;
+    pixelOnOff[74]=true;
+    pixelOnOff[75]=true;
+    pixelOnOff[76]=true;
   }
   
   /* Hour=10 - Light "TEN" */
   if (h==10){
-    individualPixels[77]=1;
-    individualPixels[78]=1;
-    individualPixels[79]=1;
+    pixelOnOff[77]=true;
+    pixelOnOff[78]=true;
+    pixelOnOff[79]=true;
   }
   
   /* Hour=11 - Light "ELEVEN" */
   if (h==11){
-    individualPixels[80]=1;
-    individualPixels[81]=1;
-    individualPixels[82]=1;
-    individualPixels[83]=1;
-    individualPixels[84]=1;
-    individualPixels[85]=1;
+    pixelOnOff[80]=true;
+    pixelOnOff[81]=true;
+    pixelOnOff[82]=true;
+    pixelOnOff[83]=true;
+    pixelOnOff[84]=true;
+    pixelOnOff[85]=true;
   }
   
   /* Hour=12 - Light "TWELVE" */
   if (h==12){
-    individualPixels[92]=1;
-    individualPixels[93]=1;
-    individualPixels[94]=1;
-    individualPixels[95]=1;
-    individualPixels[96]=1;
-    individualPixels[97]=1;
+    pixelOnOff[92]=true;
+    pixelOnOff[93]=true;
+    pixelOnOff[94]=true;
+    pixelOnOff[95]=true;
+    pixelOnOff[96]=true;
+    pixelOnOff[97]=true;
   }
+
+  short 
+    currIteration = 0, // How many iterations of the matrix animation have we completed?
+    randomNumber = 0; // Random number to "spawn" new threads in the matrix.
+  bool 
+    allPixelsMatchOnOff = false, // Are all pixels in the matrix matching the clock pixels?
+    allPixelsMatchOn = false; // Are all the litup letters from the clock also lit up in the matrix?
   
-  /* Light pixels corresponding to current time */
-  for (int i=0; i<sizeof(individualPixels); i++){
-    if (individualPixels[i]==1){
-      pixels.setPixelColor(i, pixels.Color(red,green,blue)); //Set Neopixel color
+  // While the matrix does not match the clock
+  while (!allPixelsMatchOnOff) {
+    
+    // Increase the iteration and reset all flags
+    currIteration++;
+    allPixelsMatchOnOff = true;
+    if (currIteration >= matrixIterations) {
+      allPixelsMatchOn = true;
     }
-    else{
-      pixels.setPixelColor(i,pixels.Color(0,0,0));
+
+    // Start scanning the matrix
+    for (short r = gridRows - 1; r >= 0; r--) {
+      for (short c = 0; c < gridCols; c++) {
+
+        // If the matrix animation is ending, check our flags first
+        if (currIteration >= matrixIterations) {
+          if (
+            pixelOnOff[pixelGrid[r][c]] && !pixelColours[pixelGrid[r][c]] ||
+            !pixelOnOff[pixelGrid[r][c]] && pixelColours[pixelGrid[r][c]]
+          ) {
+            allPixelsMatchOnOff = false;
+
+            if (pixelColours[pixelGrid[r][c]] == sizeof(colours) - 1) {
+              allPixelsMatchOn = false;
+            }
+          }
+        }
+        else {
+          allPixelsMatchOnOff = allPixelsMatchOn = false;
+        }
+
+        // Transition all top-level coloured letters
+        if (pixelColours[pixelGrid[r][c]] == sizeof(colours) - 1) {
+          // If we're still doing the animation OR the matrix letter colour does NOT match with the clock
+          if (
+            currIteration < matrixIterations || 
+            (
+              pixelOnOff[pixelGrid[r][c]] && !pixelColours[pixelGrid[r][c]] ||
+              !pixelOnOff[pixelGrid[r][c]] && pixelColours[pixelGrid[r][c]]
+            )
+          ) {
+            // Transition the current letter to the next colour
+            pixelColours[pixelGrid[r][c]]--;
+
+            // If there's a letter beneath the current one, then pass on the colour
+            if (r + 1 < gridRows) {
+              pixelColours[pixelGrid[r + 1][c]] = sizeof(colours) - 1;
+            }
+          }
+        }        
+        // If we're stopping the animation AND 
+        // the matrix letter colour DOES match with the clock AND
+        // there's a letter beneath the current one AND
+        // the matrix letters for the current clock are not all lit up
+        else if (
+          currIteration >= matrixIterations && 
+          (
+            pixelOnOff[pixelGrid[r][c]] && !pixelColours[pixelGrid[r][c]] ||
+            !pixelOnOff[pixelGrid[r][c]] && pixelColours[pixelGrid[r][c]]
+          ) && 
+          r + 1 < gridRows && 
+          !pixelColours[pixelGrid[r][c]] && 
+          !allPixelsMatchOn
+        ) {
+          // Pass the colour along
+          pixelColours[pixelGrid[r + 1][c]] = sizeof(colours) - 1;
+        }
+        // Transition all other coloured letters
+        else if (!pixelColours[pixelGrid[r][c]]) {
+          matrixFade(r, c, currIteration);
+        }
+
+        // If this is the last/top row and we don't have all clock letters lit
+        if (r == 0 && !allPixelsMatchOn) {
+          // Pick a random number between 1 and X
+          randomNumber = random(1, matrixDensity);
+          
+          // If the random number is 1
+          if (randomNumber == 1) {
+            // Start a new thread in the matrix
+            pixelColours[pixelGrid[r][c]] = sizeof(colours) - 1;
+          }
+        }
+      }
     }
   }
-  
-  pixels.show(); //Display Neopixel color
-  
-//  /* Clear pixel values for re-assignment during next iteration */
-//  for (int j=0; j<sizeof(individualPixels); j++){
-//      individualPixels[j]=0; //Set array values to 0
-//      pixels.setPixelColor(j, pixels.Color(0,0,0)); //Set Neopixel color to 0 brightness, i.e. off
-//  }
+        
+  colourPixels(millisWait);
   
 }
