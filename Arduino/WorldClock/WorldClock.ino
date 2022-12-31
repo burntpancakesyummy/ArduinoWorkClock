@@ -552,8 +552,7 @@ void loop()
         }
       }
     }
+
+    colourPixels(millisWait);
   }
-        
-  colourPixels(millisWait);
-  
 }
