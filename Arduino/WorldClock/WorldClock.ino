@@ -65,11 +65,6 @@ int h;
 int m;
 int s;
 
-// RGB color variables
-int red=255;
-int green=255;
-int blue=255;
-
 /*
 13 x 8
 IT~IS~TENHALF
@@ -100,7 +95,7 @@ const uint32_t colours[5] = {
   pixels.Color(255, 255, 255)
 };
 
-// Index grid to keep track of the "matrixColour" for each pixel
+// Index grid to keep track of the matrix colour for each pixel
 short pixelColours[NUMPIXELS];
 
 // Pixel mapping into grid, so matrix can flow
@@ -120,7 +115,7 @@ bool pixelOnOff[NUMPIXELS];
 
 /* Light pixels corresponding to current time */
 void colourPixels(unsigned long wait) {
-  for (short i = 0, colour; i < NUMPIXELS; i++) {
+  for (short i = 0; i < NUMPIXELS; i++) {
     pixels.setPixelColor(i, pixelColours[i]); //Set Neopixel color
   }
   
