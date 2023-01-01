@@ -22,8 +22,6 @@
 */
 
 #include <Adafruit_NeoPixel.h>
-//#include <avr/power.h>
-//#include "Time.h"
 
 // Which pin on the Arduino is connected to the NeoPixels?
 #define PIN           3
@@ -35,9 +33,6 @@
 // Note that for older NeoPixel strips you might need to change the third parameter--see the strandtest
 // example for more information on possible values.
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
-
-// Declare integer array with size corresponding to number of Neopixels in chain
-// int pixelOnOff[NUMPIXELS];
 
 //Declare pins for decrementing/incrementing current time by 5 minutes
 #define MINUSFIVEMINS 4
@@ -110,7 +105,7 @@ const short pixelGrid[gridRows][gridCols] = {
   {97,96,95,94,93,92,-1,91,90,89,88,87,86}
 };
 
-//Declare integer array with size corresponding to number of Neopixels in chain
+//Declare boolean array with size corresponding to number of Neopixels in chain
 bool pixelOnOff[NUMPIXELS];
 
 /* Light pixels corresponding to current time */
